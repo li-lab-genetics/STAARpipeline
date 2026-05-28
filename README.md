@@ -31,7 +31,7 @@ Please see the <a href="docs/STAARpipeline_manual.pdf">**STAARpipeline** user ma
 ## Data Availability
 The whole-genome functional annotation data assembled from a variety of sources and the precomputed annotation principal components are available at the [Functional Annotation of Variant - Online Resource (FAVOR)](https://favor.genohub.org) site and [FAVOR Essential Database](https://doi.org/10.7910/DVN/1VGTJI).
 ## Version
-The current version is 0.9.8 (March 23, 2025).
+The current version is 0.9.8.1 (May 27, 2026).
 ## Citation
 If you use **STAARpipeline** and **STAARpipelineSummary** for your work, please cite:
 

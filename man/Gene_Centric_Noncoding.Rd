@@ -24,6 +24,8 @@ Gene_Centric_Noncoding(
   Annotation_name = NULL,
   SPA_p_filter = TRUE,
   p_filter_cutoff = 0.05,
+  use_ancestry_informed = FALSE,
+  find_weight = FALSE,
   silent = FALSE
 )
 }
@@ -70,10 +72,16 @@ before extracting the genotype matrix (default = 1e+09).}
 
 \item{p_filter_cutoff}{threshold for the p-value recalculation using the SPA method, only used for imbalanced case-control setting (default = 0.05).}
 
+\item{use_ancestry_informed}{logical: is ancestry-informed association analysis used to estimate p-values (default = FALSE).}
+
+\item{find_weight}{logical: should the ancestry group-specific weights and weighting scenario-specific p-values for each base test be saved as output (default = FALSE).}
+
 \item{silent}{logical: should the report of error messages be suppressed (default = FALSE).}
 }
 \value{
-A list of data frames containing the STAAR p-values (including STAAR-O or STAAR-B in imbalanced case-control setting) corresponding to each noncoding functional category of the given gene.
+A list of data frames containing the STAAR p-values (including STAAR-O or STAAR-B in imbalanced case-control setting), or AI-STAAR p-values under ancestry-informed analysis, corresponding to each noncoding functional category of the given gene.
+If \code{find_weight} is TRUE, returns a list containing the AI-STAAR p-values corresponding to each noncoding functional category of the given gene, as well as the ensemble weights under two sampling scenarios 
+and p-values under scenarios 1, 2, and combined for each base test.
 }
 \description{
 The \code{Gene_Centric_Noncoding} function takes in chromosome, gene name, functional category,
@@ -87,6 +95,8 @@ an omnibus test that aggregated Burden(1,25) and Burden(1,1) together with p-val
 For multiple phenotype analysis (\code{obj_nullmodel$n.pheno > 1}),
 the results correspond to multi-trait association p-values (e.g. MultiSTAAR-O) by leveraging
 the correlation structure between multiple phenotypes.
+For ancestry-informed analysis, the results correspond to ensemble p-values across base tests, 
+with the option to return a list of base weights and p-values for each base test.
 }
 \references{
 Li, Z., Li, X., et al. (2022). A framework for detecting

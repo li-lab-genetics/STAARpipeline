@@ -104,35 +104,40 @@ disruptive_missense <- function(chr,gene_name,genofile,obj_nullmodel,genes,
 	Anno.Int.PHRED.sub <- NULL
 	Anno.Int.PHRED.sub.name <- NULL
 
-	if(variant_type=="SNV")
+	if(!is.null(Annotation_name))
 	{
-		if(Use_annotation_weights)
+		if(variant_type=="SNV")
 		{
-			for(k in 1:length(Annotation_name))
+			if(Use_annotation_weights)
 			{
-				if(Annotation_name[k]%in%Annotation_name_catalog$name)
+				for(k in 1:length(Annotation_name))
 				{
-					Anno.Int.PHRED.sub.name <- c(Anno.Int.PHRED.sub.name,Annotation_name[k])
-					Annotation.PHRED <- seqGetData(genofile, paste0(Annotation_dir,Annotation_name_catalog$dir[which(Annotation_name_catalog$name==Annotation_name[k])]))
-
-					if(Annotation_name[k]=="CADD")
+					if(Annotation_name[k]%in%Annotation_name_catalog$name)
 					{
-						Annotation.PHRED[is.na(Annotation.PHRED)] <- 0
-					}
+						Anno.Int.PHRED.sub.name <- c(Anno.Int.PHRED.sub.name,Annotation_name[k])
+						Annotation.PHRED <- seqGetData(genofile, paste0(Annotation_dir,Annotation_name_catalog$dir[which(Annotation_name_catalog$name==Annotation_name[k])]))
 
-					if(Annotation_name[k]=="aPC.LocalDiversity")
-					{
-						Annotation.PHRED.2 <- -10*log10(1-10^(-Annotation.PHRED/10))
-						Annotation.PHRED <- cbind(Annotation.PHRED,Annotation.PHRED.2)
-						Anno.Int.PHRED.sub.name <- c(Anno.Int.PHRED.sub.name,paste0(Annotation_name[k],"(-)"))
+						if(Annotation_name[k]=="CADD")
+						{
+							Annotation.PHRED[is.na(Annotation.PHRED)] <- 0
+						}
+
+						if(Annotation_name[k]=="aPC.LocalDiversity")
+						{
+							Annotation.PHRED.2 <- -10*log10(1-10^(-Annotation.PHRED/10))
+							Annotation.PHRED <- cbind(Annotation.PHRED,Annotation.PHRED.2)
+							Anno.Int.PHRED.sub.name <- c(Anno.Int.PHRED.sub.name,paste0(Annotation_name[k],"(-)"))
+						}
+						Anno.Int.PHRED.sub <- cbind(Anno.Int.PHRED.sub,Annotation.PHRED)
 					}
-					Anno.Int.PHRED.sub <- cbind(Anno.Int.PHRED.sub,Annotation.PHRED)
 				}
-			}
 
-			Anno.Int.PHRED.sub <- data.frame(Anno.Int.PHRED.sub)
-			colnames(Anno.Int.PHRED.sub) <- Anno.Int.PHRED.sub.name
+				Anno.Int.PHRED.sub <- data.frame(Anno.Int.PHRED.sub)
+				colnames(Anno.Int.PHRED.sub) <- Anno.Int.PHRED.sub.name
+			}
 		}
+	}else{
+		Anno.Int.PHRED.sub <- NULL
 	}
 
 	pvalues <- 0
@@ -146,7 +151,11 @@ disruptive_missense <- function(chr,gene_name,genofile,obj_nullmodel,genes,
 				try(pvalues <- AI_STAAR(Geno,obj_nullmodel,Anno.Int.PHRED.sub,rare_maf_cutoff=rare_maf_cutoff,rv_num_cutoff=rv_num_cutoff,rv_num_cutoff_max=rv_num_cutoff_max,find_weight=find_weight),silent=silent)
 			}
 		}else{
-			try(pvalues <- STAAR_Binary_SPA(Geno,obj_nullmodel,Anno.Int.PHRED.sub,rare_maf_cutoff=rare_maf_cutoff,rv_num_cutoff=rv_num_cutoff,rv_num_cutoff_max=rv_num_cutoff_max,SPA_p_filter=SPA_p_filter,p_filter_cutoff=p_filter_cutoff),silent=silent)
+			if(use_ancestry_informed == FALSE){
+				try(pvalues <- STAAR_Binary_SPA(Geno,obj_nullmodel,Anno.Int.PHRED.sub,rare_maf_cutoff=rare_maf_cutoff,rv_num_cutoff=rv_num_cutoff,rv_num_cutoff_max=rv_num_cutoff_max,SPA_p_filter=SPA_p_filter,p_filter_cutoff=p_filter_cutoff),silent=silent)
+			}else{
+				try(pvalues <- AI_STAAR_Binary_SPA(Geno,obj_nullmodel,Anno.Int.PHRED.sub,rare_maf_cutoff=rare_maf_cutoff,rv_num_cutoff=rv_num_cutoff,rv_num_cutoff_max=rv_num_cutoff_max,SPA_p_filter=SPA_p_filter,p_filter_cutoff=p_filter_cutoff,find_weight=find_weight),silent=silent)
+			}
 		}
 	}else
 	{
@@ -193,7 +202,6 @@ disruptive_missense <- function(chr,gene_name,genofile,obj_nullmodel,genes,
 		if(use_ancestry_informed == TRUE & find_weight == TRUE & !use_SPA){
 			results_weight <- results_weight1 <- results_weight2 <- c()
 			for(i in 1:ncol(pvalues$results_weight)){
-				results_weight_temp <- pvalues$results_weight[-c(1,2),i]
 				results_weight_temp <- unlist(pvalues$results_weight[,i][c(5:length(pvalues$results_weight[,i]), 4,3)])
 				names(results_weight_temp) <- colnames(results)[-c(1:5)]
 
@@ -202,7 +210,6 @@ disruptive_missense <- function(chr,gene_name,genofile,obj_nullmodel,genes,
 			}
 
 			for(i in 1:ncol(pvalues$results_weight1)){
-				results_weight_temp1 <- pvalues$results_weight1[-c(1,2),i]
 				results_weight_temp1 <- unlist(pvalues$results_weight1[,i][c(5:length(pvalues$results_weight1[,i]), 4,3)])
 				names(results_weight_temp1) <- colnames(results)[-c(1:5)]
 
@@ -211,7 +218,6 @@ disruptive_missense <- function(chr,gene_name,genofile,obj_nullmodel,genes,
 			}
 
 			for(i in 1:ncol(pvalues$results_weight2)){
-				results_weight_temp2 <- pvalues$results_weight2[-c(1,2),i]
 				results_weight_temp2 <- unlist(pvalues$results_weight2[,i][c(5:length(pvalues$results_weight2[,i]), 4,3)])
 				names(results_weight_temp2) <- colnames(results)[-c(1:5)]
 
@@ -221,11 +227,44 @@ disruptive_missense <- function(chr,gene_name,genofile,obj_nullmodel,genes,
 			rownames(pvalues$weight_all_1) <- rownames(pvalues$weight_all_2) <- unique(obj_nullmodel$pop.groups)
 
 			results <- list(results,
-			                weight_all_1 = pvalues$weight_all_1,
-			                weight_all_2 = pvalues$weight_all_2,
-			                results_weight = results_weight,
-			                results_weight1 = results_weight1,
-			                results_weight2 = results_weight2)
+							weight_all_1 = pvalues$weight_all_1,
+							weight_all_2 = pvalues$weight_all_2,
+							results_weight = results_weight,
+							results_weight1 = results_weight1,
+							results_weight2 = results_weight2)
+		}else if(use_ancestry_informed == TRUE & find_weight == TRUE & use_SPA){
+			results_weight <- results_weight1 <- results_weight2 <- c()
+			for(i in 1:ncol(pvalues$results_weight)){
+				results_weight_temp <- unlist(pvalues$results_weight[,i][c(4:length(pvalues$results_weight[,i]), 3)])
+				names(results_weight_temp) <- colnames(results)[-c(1:5)]
+
+				results_weight <- cbind(results_weight, results_weight_temp)
+				colnames(results_weight)[i] <- c(i-1)
+			}
+
+			for(i in 1:ncol(pvalues$results_weight1)){
+				results_weight_temp1 <- unlist(pvalues$results_weight1[,i][c(4:length(pvalues$results_weight[,i]), 3)])
+				names(results_weight_temp1) <- colnames(results)[-c(1:5)]
+
+				results_weight1 <- cbind(results_weight1, results_weight_temp1)
+				colnames(results_weight1)[i] <- c(i-1)
+			}
+
+			for(i in 1:ncol(pvalues$results_weight2)){
+				results_weight_temp2 <- unlist(pvalues$results_weight2[,i][c(4:length(pvalues$results_weight[,i]), 3)])
+				names(results_weight_temp2) <- colnames(results)[-c(1:5)]
+
+				results_weight2 <- cbind(results_weight2, results_weight_temp2)
+				colnames(results_weight2)[i] <- c(i-1)
+			}
+			rownames(pvalues$weight_all_1) <- rownames(pvalues$weight_all_2) <- unique(obj_nullmodel$pop.groups)
+
+			results <- list(results,
+							weight_all_1 = pvalues$weight_all_1,
+							weight_all_2 = pvalues$weight_all_2,
+							results_weight = results_weight,
+							results_weight1 = results_weight1,
+							results_weight2 = results_weight2)
 		}
 	}
 

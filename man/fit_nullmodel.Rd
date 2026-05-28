@@ -15,6 +15,9 @@ fit_nullmodel(
   id,
   random.slope = NULL,
   groups = NULL,
+  pop.groups = NULL,
+  B = NULL,
+  seed = 7590,
   family = binomial(link = "logit"),
   method = "REML",
   method.optim = "AI",
@@ -63,6 +66,12 @@ heteroscedastic linear mixed model (allowing residual variances in different gro
 This variable must be included in the names of \code{data}, and \code{family} must be "gaussian"
 and \code{method.optim} must be "AI" (default = NULL).}
 
+\item{pop.groups}{an optional vector of defined ancestries for all individuals within the given data parameter.}
+
+\item{B}{an optional positive numerical value for the number of base tests for ancestry-informed ensemble testing.}
+
+\item{seed}{an optional numerical value to set the initial seed for generating ensemble weights.}
+
 \item{family}{a description of the error distribution and link function to be used
 in the model. This can be a character string naming a family function, a family
 function or the result of a call to a family function. (See \code{\link{family}} for details of family functions).}
@@ -96,6 +105,8 @@ for testing and debugging purpose (default = FALSE).}
 The function returns an object of the model fit from \code{\link{glmmkin}} (\code{obj_nullmodel}),
 whether the samples are under imbalanced case-control design (obj_nullmodel$use_SPA)
 and whether the \code{kins} matrix is sparse when fitting the null model. See \code{\link{glmmkin}} for more details.
+If the parameters \code{pop.groups} >= 2 and \code{B} are provided, initial ensemble weights 
+for further processing in \code{AI_STAAR} or \code{AI_Individual_Analysis} are also returned.
 }
 \description{
 The \code{fit_nullmodel} function is a wrapper of the \code{glmmkin} function from

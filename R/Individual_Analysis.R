@@ -142,8 +142,8 @@ Individual_Analysis <- function(chr,start_loc=NULL,end_loc=NULL,individual_resul
 
 	if(use_ancestry_informed)
 	{
-		results <- AI_Individual_Analysis(chr=chr,individual_results=individual_results,genofile=genofile,
-		                                  obj_nullmodel=obj_nullmodel,QC_label=QC_label,variant_type=variant_type,
+		results <- AI_Individual_Analysis(chr=chr,start_loc=start_loc,end_loc=end_loc,individual_results=individual_results,
+		                                  genofile=genofile,obj_nullmodel=obj_nullmodel,QC_label=QC_label,variant_type=variant_type,
 		                                  geno_missing_imputation=geno_missing_imputation,find_weight=find_weight)
 		return(results)
 	}
