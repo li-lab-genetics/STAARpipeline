@@ -9,6 +9,10 @@ Individual_Score_Test_SPA <- function(G, XW, XXWX_inv, residuals, muhat, tol, ma
     .Call(`_STAARpipeline_Individual_Score_Test_SPA`, G, XW, XXWX_inv, residuals, muhat, tol, max_iter)
 }
 
+Individual_Score_Test_SPA_wt <- function(G, residuals, muhat, tol, max_iter) {
+    .Call(`_STAARpipeline_Individual_Score_Test_SPA_wt`, G, residuals, muhat, tol, max_iter)
+}
+
 Individual_Score_Test_cond <- function(G, Sigma_i, Sigma_iX, cov, X_adj, residuals) {
     .Call(`_STAARpipeline_Individual_Score_Test_cond`, G, Sigma_i, Sigma_iX, cov, X_adj, residuals)
 }
