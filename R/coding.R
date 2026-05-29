@@ -981,7 +981,7 @@ coding <- function(chr,gene_name,genofile,obj_nullmodel,genes,
 							names(results_m_weight) <- colnames(results)[4:10]
 							results_m_weight <- c(results_m_weight,rep(0,2))
 							names(results_m_weight)[(length(results_m_weight)-1):length(results_m_weight)] <- c("Burden(1,25)-Disruptive","Burden(1,1)-Disruptive")
-							results_m_weight[(length(results_m_weight)-1):length(results_m_weight)] <- unlist(pvalues_dm$results_weight[,i][c("results_STAAR_B_1_25.Burden(1,25)","results_STAAR_B_1_1.Burden(1,1)")])
+							results_m_weight[(length(results_m_weight)-1):length(results_m_weight)] <- unlist(pvalues_ds$results_weight[,i][c("results_STAAR_B_1_25.Burden(1,25)","results_STAAR_B_1_1.Burden(1,1)")])
 
 							## check whether the p-values is NA. If so, set NA equals 1.
 							if(is.na(results_m_weight[(length(results_m_weight)-1)]))
@@ -1103,7 +1103,7 @@ coding <- function(chr,gene_name,genofile,obj_nullmodel,genes,
 							names(results_m_weight1) <- colnames(results)[4:10]
 							results_m_weight1 <- c(results_m_weight1,rep(0,2))
 							names(results_m_weight1)[(length(results_m_weight1)-1):length(results_m_weight1)] <- c("Burden(1,25)-Disruptive","Burden(1,1)-Disruptive")
-							results_m_weight1[(length(results_m_weight1)-1):length(results_m_weight1)] <- unlist(pvalues_dm$results_weight1[,i][c("results_STAAR_B_1_25.Burden(1,25)","results_STAAR_B_1_1.Burden(1,1)")])
+							results_m_weight1[(length(results_m_weight1)-1):length(results_m_weight1)] <- unlist(pvalues_ds$results_weight1[,i][c("results_STAAR_B_1_25.Burden(1,25)","results_STAAR_B_1_1.Burden(1,1)")])
 
 							## check whether the p-values is NA. If so, set NA equals 1.
 							if(is.na(results_m_weight1[(length(results_m_weight1)-1)]))
@@ -1225,7 +1225,7 @@ coding <- function(chr,gene_name,genofile,obj_nullmodel,genes,
 							names(results_m_weight2) <- colnames(results)[4:10]
 							results_m_weight2 <- c(results_m_weight2,rep(0,2))
 							names(results_m_weight2)[(length(results_m_weight2)-1):length(results_m_weight2)] <- c("Burden(1,25)-Disruptive","Burden(1,1)-Disruptive")
-							results_m_weight2[(length(results_m_weight2)-1):length(results_m_weight2)] <- unlist(pvalues_dm$results_weight2[,i][c("results_STAAR_B_1_25.Burden(1,25)","results_STAAR_B_1_1.Burden(1,1)")])
+							results_m_weight2[(length(results_m_weight2)-1):length(results_m_weight2)] <- unlist(pvalues_ds$results_weight2[,i][c("results_STAAR_B_1_25.Burden(1,25)","results_STAAR_B_1_1.Burden(1,1)")])
 
 							## check whether the p-values is NA. If so, set NA equals 1.
 							if(is.na(results_m_weight2[(length(results_m_weight2)-1)]))

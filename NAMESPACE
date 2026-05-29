@@ -4,6 +4,7 @@ importFrom("stats", "pchisq", "lm", "model.matrix", "quantile", "rnorm", "binomi
 importFrom("SeqVarTools", "isSNV")
 importFrom("GenomicFeatures", "genes", "promoters")
 importFrom("GENESIS", "makeSparseMatrix")
+importFrom("stats", "na.omit")
 
 useDynLib(STAARpipeline, .registration = TRUE)
 
