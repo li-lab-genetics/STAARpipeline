@@ -7,6 +7,24 @@
 
 using namespace Rcpp;
 
+static void K1_K2_Binary_SPA_wt(double x, const arma::vec& muhat, const arma::vec& G, double q, double& first, double& second)
+{
+	first = 0.0;
+	second = 0.0;
+
+	for(arma::uword i = 0; i < muhat.n_elem; i++)
+	{
+		double exponential = exp(-x * G(i));
+		first = first - muhat(i) * G(i);
+		first = first + muhat(i) * G(i)/(muhat(i) + (1 - muhat(i))*exponential);
+		double temp1 = muhat(i) * (1 - muhat(i)) * pow(G(i),2.0)*exponential;
+		double temp2 = muhat(i) + (1 - muhat(i)) * exponential;
+		second = second + temp1/pow(temp2,2.0);
+	}
+
+	first = first - q;
+}
+
 // declare K_Binary_SPA_wt
 double K_Binary_SPA_wt(double x, arma::vec muhat, arma::vec G);
 // declare K_Binary_SPA_alt_wt (alternative way if not converge)
@@ -159,7 +177,10 @@ double NR_Binary_SPA_wt(arma::vec muhat, arma::vec G, double q, double init, dou
 	
 	if(fabs(K1_Binary_SPA_wt(xi, muhat, G, q)) > tol)
 	{
-		xi_update = xi - K1_Binary_SPA_wt(xi, muhat, G, q)/K2_Binary_SPA_wt(xi, muhat, G);
+		double first = 0.0;
+		double second = 0.0;
+		K1_K2_Binary_SPA_wt(xi,muhat,G,q,first,second);
+		xi_update = xi - first/second;
 	}
 	
 	// iteration number
@@ -173,14 +194,14 @@ double NR_Binary_SPA_wt(arma::vec muhat, arma::vec G, double q, double init, dou
 		xi = xi_update;	
 		
 		// calculate numerator
-		numerator = K1_Binary_SPA_wt(xi, muhat, G, q);
+		K1_K2_Binary_SPA_wt(xi,muhat,G,q,numerator,denominator);
 		if((R_finite(numerator)==0)||(check_is_na_wt(numerator)))
 		{
 			numerator = K1_Binary_SPA_alt_wt(xi, muhat, G, q);
 		}
 		
 		// calculate denominator
-		denominator = K2_Binary_SPA_wt(xi, muhat, G);
+		
 		if((R_finite(denominator)==0)||(check_is_na_wt(denominator)))
 		{
 			denominator = K2_Binary_SPA_alt_wt(xi, muhat, G);
@@ -434,7 +455,7 @@ double K_Binary_SPA_alt_wt(double x, arma::vec muhat, arma::vec G)
 
     for(int i = 0; i < n; i++)
     {
-		// res = res - x * muhat(i) * G(i);
+		res = res + x * (1 - muhat(i)) * G(i);
 		
         res = res + log((1 - muhat(i))*exp(-x * G(i)) + muhat(i));
     }
@@ -508,7 +529,7 @@ double K2_Binary_SPA_alt_wt(double x, arma::vec muhat, arma::vec G)
 
     for(int i = 0; i < n; i++)
     {
-		temp1 = muhat(i) * (1 - muhat(i)) * pow(G(i),2.0);
+		temp1 = muhat(i) * (1 - muhat(i)) * pow(G(i),2.0) * exp(x * G(i));
 		temp2 = muhat(i) * exp(x * G(i)) + (1 - muhat(i));
 		
         res = res + temp1/pow(temp2,2.0);

@@ -6,7 +6,7 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-List Individual_Score_Test_denseGRM(arma::mat G, arma::mat P, arma::vec residuals)
+List Individual_Score_Test_denseGRM(arma::mat G, const arma::mat& P, arma::vec residuals)
 {
 	int i;
 
@@ -31,14 +31,13 @@ List Individual_Score_Test_denseGRM(arma::mat G, arma::mat P, arma::vec residual
 
 	double test_stat = 0;
 
-	arma::mat Cov;
-	Cov.zeros(p,p);
-
-	Cov = trans(P*G)*G;
+	arma::mat P_G = P*G;
 
 	for(i = 0; i < p; i++)
 	{
-		if (Cov(i , i) == 0)
+		double Cov_ii = arma::dot(P_G.col(i),G.col(i));
+
+		if (Cov_ii == 0)
 		{
 			pvalue_log(i) = 0;
 			Uscore_se(i) = 0;
@@ -47,11 +46,11 @@ List Individual_Score_Test_denseGRM(arma::mat G, arma::mat P, arma::vec residual
 		}
 		else
 		{
-			test_stat = pow(Uscore(i),2)/Cov(i,i);
+			test_stat = pow(Uscore(i),2)/Cov_ii;
 			pvalue_log(i) = -R::pchisq(test_stat,1,false,true);
 
-			Uscore_se(i) = sqrt(Cov(i,i));
-			Est(i) = Uscore(i)/Cov(i,i);
+			Uscore_se(i) = sqrt(Cov_ii);
+			Est(i) = Uscore(i)/Cov_ii;
 			Est_se(i) = 1/Uscore_se(i);
 		}
 

@@ -7,6 +7,24 @@
 
 using namespace Rcpp;
 
+static void K1_K2_Binary_SPA(double x, const arma::vec& muhat, const arma::vec& G, double q, double& first, double& second)
+{
+	first = 0.0;
+	second = 0.0;
+
+	for(arma::uword i = 0; i < muhat.n_elem; i++)
+	{
+		double exponential = exp(-x * G(i));
+		first = first - muhat(i) * G(i);
+		first = first + muhat(i) * G(i)/(muhat(i) + (1 - muhat(i))*exponential);
+		double temp1 = muhat(i) * (1 - muhat(i)) * pow(G(i),2.0)*exponential;
+		double temp2 = muhat(i) + (1 - muhat(i)) * exponential;
+		second = second + temp1/pow(temp2,2.0);
+	}
+
+	first = first - q;
+}
+
 // declare K_Binary_SPA
 double K_Binary_SPA(double x, arma::vec muhat, arma::vec G);
 // declare K_Binary_SPA_alt (alternative way if not converge)
@@ -56,9 +74,9 @@ arma::vec Individual_Score_Test_SPA(arma::mat G, arma::mat XW, arma::mat XXWX_in
 	
 	// calculate G_tilde 
 	arma::mat G_tilde;
-	G_tilde.zeros(vn,un);
+	// Reuse a bounded residualization workspace.
 
-	G_tilde = G - XXWX_inv*(XW*G);
+	const int batch_size = 32;
 
 	// Score statistics
 	arma::rowvec x = trans(residuals)*G;
@@ -68,18 +86,22 @@ arma::vec Individual_Score_Test_SPA(arma::mat G, arma::mat XW, arma::mat XXWX_in
 	double xmin = -100.0;
 	double xmax = 100.0;
 
-	for(i = 0; i < un; i++)
+	for(int batch_start = 0; batch_start < un; batch_start += batch_size)
+	{
+		int batch_end = std::min(un-1,batch_start+batch_size-1);
+		G_tilde = G.cols(batch_start,batch_end) - XXWX_inv*(XW*G.cols(batch_start,batch_end));
+		for(i = batch_start; i <= batch_end; i++)
 	{
 		sum0 = x(i);
 		
 		// calculate p-value
 		respart1 = 1.0;
 		respart2 = 1.0;
-		respart1 = Saddle_Binary_SPA(fabs(sum0), muhat, G_tilde.col(i), tol, max_iter, lower1);
+		respart1 = Saddle_Binary_SPA(fabs(sum0), muhat, G_tilde.col(i-batch_start), tol, max_iter, lower1);
 		
 		if((check_is_na(respart1))||(respart1 == 1.0))
 		{
-			respart1 = Saddle_Binary_SPA_Bisection(fabs(sum0), muhat, G_tilde.col(i), tol, max_iter, xmin, xmax, lower1);
+			respart1 = Saddle_Binary_SPA_Bisection(fabs(sum0), muhat, G_tilde.col(i-batch_start), tol, max_iter, xmin, xmax, lower1);
 		}
 		
 		if((check_is_na(respart1))||(respart1 == 1.0))
@@ -87,11 +109,11 @@ arma::vec Individual_Score_Test_SPA(arma::mat G, arma::mat XW, arma::mat XXWX_in
 			res(i) = 1;
 		}else
 		{
-			respart2 = Saddle_Binary_SPA(-fabs(sum0), muhat, G_tilde.col(i), tol, max_iter, lower2);
+			respart2 = Saddle_Binary_SPA(-fabs(sum0), muhat, G_tilde.col(i-batch_start), tol, max_iter, lower2);
 			
 			if((check_is_na(respart2))||(respart2 == 1.0))
 			{
-				respart2 = Saddle_Binary_SPA_Bisection(-fabs(sum0), muhat, G_tilde.col(i), tol, max_iter, xmin, xmax, lower2);
+				respart2 = Saddle_Binary_SPA_Bisection(-fabs(sum0), muhat, G_tilde.col(i-batch_start), tol, max_iter, xmin, xmax, lower2);
 			}
 			
 			if((check_is_na(respart2))||(respart2 == 1.0))
@@ -110,6 +132,7 @@ arma::vec Individual_Score_Test_SPA(arma::mat G, arma::mat XW, arma::mat XXWX_in
 		}
 	}
 
+	}
 	return res;
 }
 
@@ -166,7 +189,10 @@ double NR_Binary_SPA(arma::vec muhat, arma::vec G, double q, double init, double
 	
 	if(fabs(K1_Binary_SPA(xi, muhat, G, q)) > tol)
 	{
-		xi_update = xi - K1_Binary_SPA(xi, muhat, G, q)/K2_Binary_SPA(xi, muhat, G);
+		double first = 0.0;
+		double second = 0.0;
+		K1_K2_Binary_SPA(xi,muhat,G,q,first,second);
+		xi_update = xi - first/second;
 	}
 	
 	// iteration number
@@ -180,14 +206,14 @@ double NR_Binary_SPA(arma::vec muhat, arma::vec G, double q, double init, double
 		xi = xi_update;	
 		
 		// calculate numerator
-		numerator = K1_Binary_SPA(xi, muhat, G, q);
+		K1_K2_Binary_SPA(xi,muhat,G,q,numerator,denominator);
 		if((R_finite(numerator)==0)||(check_is_na(numerator)))
 		{
 			numerator = K1_Binary_SPA_alt(xi, muhat, G, q);
 		}
 		
 		// calculate denominator
-		denominator = K2_Binary_SPA(xi, muhat, G);
+		
 		if((R_finite(denominator)==0)||(check_is_na(denominator)))
 		{
 			denominator = K2_Binary_SPA_alt(xi, muhat, G);
@@ -441,7 +467,7 @@ double K_Binary_SPA_alt(double x, arma::vec muhat, arma::vec G)
 
     for(int i = 0; i < n; i++)
     {
-		// res = res - x * muhat(i) * G(i);
+		res = res + x * (1 - muhat(i)) * G(i);
 		
         res = res + log((1 - muhat(i))*exp(-x * G(i)) + muhat(i));
     }
@@ -515,7 +541,7 @@ double K2_Binary_SPA_alt(double x, arma::vec muhat, arma::vec G)
 
     for(int i = 0; i < n; i++)
     {
-		temp1 = muhat(i) * (1 - muhat(i)) * pow(G(i),2.0);
+		temp1 = muhat(i) * (1 - muhat(i)) * pow(G(i),2.0) * exp(x * G(i));
 		temp2 = muhat(i) * exp(x * G(i)) + (1 - muhat(i));
 		
         res = res + temp1/pow(temp2,2.0);

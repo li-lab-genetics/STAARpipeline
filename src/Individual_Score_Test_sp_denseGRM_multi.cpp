@@ -5,10 +5,26 @@
 #include <math.h>
 using namespace Rcpp;
 
-// [[Rcpp::export]]
-List Individual_Score_Test_sp_denseGRM_multi(arma::sp_mat G, arma::mat P, arma::vec residuals, int n_pheno=1)
+static double sparse_dense_col_dot(const arma::sp_mat& A, const arma::mat& B, arma::uword col_a, arma::uword col_b)
 {
-	int i,k;
+	arma::sp_mat::const_col_iterator a_it = A.begin_col(col_a);
+	arma::sp_mat::const_col_iterator a_end = A.end_col(col_a);
+
+	double out = 0;
+
+	while (a_it != a_end)
+	{
+		out += (*a_it) * B(a_it.row(), col_b);
+		++a_it;
+	}
+
+	return out;
+}
+
+// [[Rcpp::export]]
+List Individual_Score_Test_sp_denseGRM_multi(arma::sp_mat G, const arma::mat& P, arma::vec residuals, int n_pheno=1)
+{
+	int i,k,l;
 	int p = G.n_cols;
 
 	// number of markers
@@ -28,10 +44,8 @@ List Individual_Score_Test_sp_denseGRM_multi(arma::sp_mat G, arma::mat P, arma::
 
 	double test_stat = 0;
 
-	arma::mat Cov;
-	Cov.zeros(p,p);
-
-	Cov = trans(P*G)*G;
+	arma::mat P_G;
+	P_G = P*G;
 
 	arma::mat quad;
 	quad.zeros(1,1);
@@ -43,7 +57,13 @@ List Individual_Score_Test_sp_denseGRM_multi(arma::sp_mat G, arma::mat P, arma::
 			id_single(k) = k*pp+i;
 		}
 
-		Uscore_cov = Cov(id_single,id_single);
+		for(k = 0; k < n_pheno; k++)
+		{
+			for(l = 0; l < n_pheno; l++)
+			{
+				Uscore_cov(k,l) = sparse_dense_col_dot(G, P_G, id_single(l), id_single(k));
+			}
+		}
 
 		if (arma::det(Uscore_cov) == 0)
 		{

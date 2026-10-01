@@ -8,7 +8,7 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 List Individual_Score_Test_multi(arma::mat G, arma::sp_mat Sigma_i, arma::mat Sigma_iX, arma::mat cov, arma::vec residuals, int n_pheno=1)
 {
-	int i,k;
+	int i,k,l;
 	int p = G.n_cols;
 
 	// number of markers
@@ -33,11 +33,10 @@ List Individual_Score_Test_multi(arma::mat G, arma::sp_mat Sigma_i, arma::mat Si
 	arma::mat tSigma_iX_G;
 	tSigma_iX_G.zeros(q,p);
 
-	arma::mat Cov;
-	Cov.zeros(p,p);
+	arma::mat tG_Sigma_i;
+	tG_Sigma_i = trans(G)*Sigma_i;
 
 	tSigma_iX_G = trans(Sigma_iX)*G;
-	Cov = (trans(G)*Sigma_i)*G - trans(tSigma_iX_G)*cov*tSigma_iX_G;
 
 	arma::mat quad;
 	quad.zeros(1,1);
@@ -49,7 +48,17 @@ List Individual_Score_Test_multi(arma::mat G, arma::sp_mat Sigma_i, arma::mat Si
 			id_single(k) = k*pp+i;
 		}
 
-		Uscore_cov = Cov(id_single,id_single);
+		for(k = 0; k < n_pheno; k++)
+		{
+			for(l = 0; l < n_pheno; l++)
+			{
+				Uscore_cov(k,l) = arma::as_scalar(tG_Sigma_i.row(id_single(k))*G.col(id_single(l)));
+				if(q > 0)
+				{
+					Uscore_cov(k,l) -= arma::as_scalar(trans(tSigma_iX_G.col(id_single(k)))*cov*tSigma_iX_G.col(id_single(l)));
+				}
+			}
+		}
 
 		if (arma::det(Uscore_cov) == 0)
 		{

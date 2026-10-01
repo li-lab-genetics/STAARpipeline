@@ -36,15 +36,18 @@ List Individual_Score_Test(arma::mat G, arma::sp_mat Sigma_i, arma::mat Sigma_iX
 	arma::mat tSigma_iX_G;
 	tSigma_iX_G.zeros(q,p);
 
-	arma::mat Cov;
-	Cov.zeros(p,p);
-
+	arma::mat tG_S = trans(G)*Sigma_i;
 	tSigma_iX_G = trans(Sigma_iX)*G;
-	Cov = (trans(G)*Sigma_i)*G - trans(tSigma_iX_G)*cov*tSigma_iX_G;
 
 	for(i = 0; i < p; i++)
 	{
-		if (Cov(i , i) == 0)
+		double Cov_ii = arma::as_scalar(tG_S.row(i)*G.col(i));
+		if(q > 0)
+		{
+			Cov_ii -= arma::as_scalar(trans(tSigma_iX_G.col(i))*cov*tSigma_iX_G.col(i));
+		}
+
+		if (Cov_ii == 0)
 		{
 			pvalue_log(i) = 0;
 			Uscore_se(i) = 0;
@@ -53,11 +56,11 @@ List Individual_Score_Test(arma::mat G, arma::sp_mat Sigma_i, arma::mat Sigma_iX
 		}
 		else
 		{
-			test_stat = pow(Uscore(i),2)/Cov(i,i);
+			test_stat = pow(Uscore(i),2)/Cov_ii;
 			pvalue_log(i) = -R::pchisq(test_stat,1,false,true);
 
-			Uscore_se(i) = sqrt(Cov(i,i));
-			Est(i) = Uscore(i)/Cov(i,i);
+			Uscore_se(i) = sqrt(Cov_ii);
+			Est(i) = Uscore(i)/Cov_ii;
 			Est_se(i) = 1/Uscore_se(i);
 		}
 

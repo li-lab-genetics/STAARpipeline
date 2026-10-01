@@ -8,7 +8,7 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 List Individual_Score_Test_denseGRM_multi(arma::mat G, arma::mat P, arma::vec residuals, int n_pheno=1)
 {
-	int i,k;
+	int i,k,l;
 	int p = G.n_cols;
 
 	// number of markers
@@ -28,10 +28,8 @@ List Individual_Score_Test_denseGRM_multi(arma::mat G, arma::mat P, arma::vec re
 
 	double test_stat = 0;
 
-	arma::mat Cov;
-	Cov.zeros(p,p);
-
-	Cov = trans(P*G)*G;
+	arma::mat P_G;
+	P_G = P*G;
 
 	arma::mat quad;
 	quad.zeros(1,1);
@@ -43,7 +41,13 @@ List Individual_Score_Test_denseGRM_multi(arma::mat G, arma::mat P, arma::vec re
 			id_single(k) = k*pp+i;
 		}
 
-		Uscore_cov = Cov(id_single,id_single);
+		for(k = 0; k < n_pheno; k++)
+		{
+			for(l = 0; l < n_pheno; l++)
+			{
+				Uscore_cov(k,l) = arma::as_scalar(trans(P_G.col(id_single(k)))*G.col(id_single(l)));
+			}
+		}
 
 		if (arma::det(Uscore_cov) == 0)
 		{

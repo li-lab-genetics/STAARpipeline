@@ -95,13 +95,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // Individual_Score_Test_denseGRM
-List Individual_Score_Test_denseGRM(arma::mat G, arma::mat P, arma::vec residuals);
+List Individual_Score_Test_denseGRM(arma::mat G, const arma::mat& P, arma::vec residuals);
 RcppExport SEXP _STAARpipeline_Individual_Score_Test_denseGRM(SEXP GSEXP, SEXP PSEXP, SEXP residualsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type G(GSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type P(PSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type P(PSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type residuals(residualsSEXP);
     rcpp_result_gen = Rcpp::wrap(Individual_Score_Test_denseGRM(G, P, residuals));
     return rcpp_result_gen;
@@ -153,26 +153,26 @@ BEGIN_RCPP
 END_RCPP
 }
 // Individual_Score_Test_sp_denseGRM
-List Individual_Score_Test_sp_denseGRM(arma::sp_mat G, arma::mat P, arma::vec residuals);
+List Individual_Score_Test_sp_denseGRM(arma::sp_mat G, const arma::mat& P, arma::vec residuals);
 RcppExport SEXP _STAARpipeline_Individual_Score_Test_sp_denseGRM(SEXP GSEXP, SEXP PSEXP, SEXP residualsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::sp_mat >::type G(GSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type P(PSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type P(PSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type residuals(residualsSEXP);
     rcpp_result_gen = Rcpp::wrap(Individual_Score_Test_sp_denseGRM(G, P, residuals));
     return rcpp_result_gen;
 END_RCPP
 }
 // Individual_Score_Test_sp_denseGRM_multi
-List Individual_Score_Test_sp_denseGRM_multi(arma::sp_mat G, arma::mat P, arma::vec residuals, int n_pheno);
+List Individual_Score_Test_sp_denseGRM_multi(arma::sp_mat G, const arma::mat& P, arma::vec residuals, int n_pheno);
 RcppExport SEXP _STAARpipeline_Individual_Score_Test_sp_denseGRM_multi(SEXP GSEXP, SEXP PSEXP, SEXP residualsSEXP, SEXP n_phenoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::sp_mat >::type G(GSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type P(PSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type P(PSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type residuals(residualsSEXP);
     Rcpp::traits::input_parameter< int >::type n_pheno(n_phenoSEXP);
     rcpp_result_gen = Rcpp::wrap(Individual_Score_Test_sp_denseGRM_multi(G, P, residuals, n_pheno));

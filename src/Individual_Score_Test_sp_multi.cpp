@@ -5,10 +5,40 @@
 #include <math.h>
 using namespace Rcpp;
 
+static double sparse_col_dot(const arma::sp_mat& A, const arma::sp_mat& B, arma::uword col_a, arma::uword col_b)
+{
+	arma::sp_mat::const_col_iterator a_it = A.begin_col(col_a);
+	arma::sp_mat::const_col_iterator a_end = A.end_col(col_a);
+	arma::sp_mat::const_col_iterator b_it = B.begin_col(col_b);
+	arma::sp_mat::const_col_iterator b_end = B.end_col(col_b);
+
+	double out = 0;
+
+	while ((a_it != a_end) && (b_it != b_end))
+	{
+		if (a_it.row() == b_it.row())
+		{
+			out += (*a_it) * (*b_it);
+			++a_it;
+			++b_it;
+		}
+		else if (a_it.row() < b_it.row())
+		{
+			++a_it;
+		}
+		else
+		{
+			++b_it;
+		}
+	}
+
+	return out;
+}
+
 // [[Rcpp::export]]
 List Individual_Score_Test_sp_multi(arma::sp_mat G, arma::sp_mat Sigma_i, arma::mat Sigma_iX, arma::mat cov, arma::vec residuals, int n_pheno=1)
 {
-	int i,k;
+	int i,k,l;
 	int p = G.n_cols;
 
 	// number of markers
@@ -30,14 +60,12 @@ List Individual_Score_Test_sp_multi(arma::sp_mat G, arma::sp_mat Sigma_i, arma::
 
 	int q = Sigma_iX.n_cols;
 
+	arma::sp_mat Sigma_i_G;
+	Sigma_i_G = Sigma_i*G;
+
 	arma::mat tSigma_iX_G;
 	tSigma_iX_G.zeros(q,p);
-
-	arma::mat Cov;
-	Cov.zeros(p,p);
-
 	tSigma_iX_G = trans(Sigma_iX)*G;
-	Cov = trans(trans(Sigma_i*G)*G) - trans(tSigma_iX_G)*cov*tSigma_iX_G;
 
 	arma::mat quad;
 	quad.zeros(1,1);
@@ -49,7 +77,19 @@ List Individual_Score_Test_sp_multi(arma::sp_mat G, arma::sp_mat Sigma_i, arma::
 			id_single(k) = k*pp+i;
 		}
 
-		Uscore_cov = Cov(id_single,id_single);
+		for(k = 0; k < n_pheno; k++)
+		{
+			for(l = 0; l < n_pheno; l++)
+			{
+				Uscore_cov(k,l) = sparse_col_dot(G, Sigma_i_G, id_single(k), id_single(l));
+
+				if (q > 0)
+				{
+					Uscore_cov(k,l) = Uscore_cov(k,l) -
+						arma::as_scalar(trans(tSigma_iX_G.col(id_single(k)))*cov*tSigma_iX_G.col(id_single(l)));
+				}
+			}
+		}
 
 		if (arma::det(Uscore_cov) == 0)
 		{
